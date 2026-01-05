@@ -7,7 +7,13 @@ class Calculator:
         self.root.title("Calculator")
         self.root.resizable(False, False)
         self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(1, weight=1)
+        self.root.rowconfigure(0, weight=1)
+
+        # Main container to give the UI breathing room
+        self.container = ttk.Frame(self.root, style="Main.TFrame", padding=(18, 20))
+        self.container.grid(row=0, column=0, sticky="nsew")
+        self.container.columnconfigure(0, weight=1)
+        self.container.rowconfigure(1, weight=1)
 
         # Track expression and result strings
         self.expression = ""
@@ -19,9 +25,17 @@ class Calculator:
 
     def create_display(self):
         """Create the stacked expression/result display."""
-        display_frame = ttk.Frame(self.root, padding=(14, 16))
-        display_frame.grid(row=0, column=0, sticky="ew")
+        display_frame = ttk.Frame(self.container, style="Display.TFrame", padding=(16, 18))
+        display_frame.grid(row=0, column=0, sticky="ew", pady=(0, 10))
         display_frame.columnconfigure(0, weight=1)
+
+        title = ttk.Label(
+            display_frame,
+            text="Aurora Calc",
+            style="Title.TLabel",
+            anchor="w",
+        )
+        title.grid(row=0, column=0, sticky="w")
 
         expression_label = ttk.Label(
             display_frame,
@@ -29,7 +43,7 @@ class Calculator:
             style="Expression.TLabel",
             anchor="e",
         )
-        expression_label.grid(row=0, column=0, sticky="ew")
+        expression_label.grid(row=1, column=0, sticky="ew", pady=(10, 2))
 
         result_label = ttk.Label(
             display_frame,
@@ -37,11 +51,11 @@ class Calculator:
             style="Result.TLabel",
             anchor="e",
         )
-        result_label.grid(row=1, column=0, sticky="ew", pady=(6, 0))
+        result_label.grid(row=2, column=0, sticky="ew")
 
     def create_buttons(self):
         """Create calculator buttons."""
-        button_frame = ttk.Frame(self.root, padding=(14, 14))
+        button_frame = ttk.Frame(self.container, style="ButtonArea.TFrame", padding=(10, 12))
         button_frame.grid(row=1, column=0, sticky="nsew")
         button_frame.columnconfigure(tuple(range(4)), weight=1)
         button_frame.rowconfigure(tuple(range(5)), weight=1)
@@ -63,16 +77,15 @@ class Calculator:
                 elif text in ['C', 'DEL']:
                     style = 'Clear.TButton'
                 else:
-                    style = 'TButton'
+                    style = 'Keypad.TButton'
 
                 btn = ttk.Button(
                     button_frame,
                     text=text,
-                    width=8,
                     style=style,
                     command=lambda t=text: self.button_click(t),
                 )
-                btn.grid(row=i, column=j, padx=2, pady=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+                btn.grid(row=i, column=j, padx=4, pady=4, sticky=(tk.W, tk.E, tk.N, tk.S))
 
     def button_click(self, char):
         """Handle button clicks."""
@@ -113,32 +126,62 @@ def main():
     # Configure styles for different button types
     style = ttk.Style()
     style.theme_use('clam')
-    background = "#111827"
-    surface = "#1f2937"
-    surface_lift = "#374151"
-    accent = "#10b981"
-    operator = "#06b6d4"
-    warning = "#fbbf24"
+    palette = {
+        "background": "#050915",
+        "card": "#0f172a",
+        "raised": "#1a2335",
+        "hover": "#1f2b3f",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8",
+        "accent": "#f97316",
+        "accent_hover": "#ea580c",
+        "operator": "#22d3ee",
+        "operator_active": "#67e8f9",
+        "warning": "#fbbf24",
+    }
 
-    root.configure(bg=background)
-    style.configure('TFrame', background=background)
+    root.configure(bg=palette["background"], padx=10, pady=10)
+    style.configure('TFrame', background=palette["background"])
 
-    style.configure('Expression.TLabel', background=background,
-                    foreground="#9ca3af", font=('Segoe UI', 12))
-    style.configure('Result.TLabel', background=background,
-                    foreground="#f9fafb", font=('Segoe UI', 28, 'bold'))
-    style.configure('TButton', font=('Segoe UI', 14), padding=10,
-                    background=surface, foreground="#f9fafb", borderwidth=0)
-    style.map('TButton', background=[('active', surface_lift)],
-              relief=[('pressed', 'sunken'), ('!pressed', 'flat')])
-    style.configure('Operator.TButton', background=surface, foreground=operator)
-    style.map('Operator.TButton', background=[('active', "#0ea5e9")],
-              foreground=[('active', "#f9fafb")])
-    style.configure('Accent.TButton', background=accent, foreground="#ffffff")
-    style.map('Accent.TButton', background=[('active', "#0d9e6f")])
-    style.configure('Clear.TButton', background=surface, foreground=warning)
-    style.map('Clear.TButton', background=[('active', surface_lift)],
-              foreground=[('active', "#f9fafb")])
+    style.configure('Main.TFrame', background=palette["card"])
+    style.configure('Display.TFrame', background=palette["card"])
+    style.configure('ButtonArea.TFrame', background=palette["card"])
+
+    style.configure('Title.TLabel', background=palette["card"],
+                    foreground=palette["muted"], font=('Segoe UI Semibold', 11))
+    style.configure('Expression.TLabel', background=palette["card"],
+                    foreground=palette["muted"], font=('Segoe UI', 12))
+    style.configure('Result.TLabel', background=palette["card"],
+                    foreground=palette["text"], font=('Segoe UI Semibold', 30))
+
+    base_padding = (12, 14)
+    style.configure('Keypad.TButton', font=('Segoe UI Semibold', 14), padding=base_padding,
+                    background=palette["raised"], foreground=palette["text"],
+                    borderwidth=0, relief='flat')
+    style.map('Keypad.TButton',
+              background=[('active', palette["hover"]), ('pressed', palette["hover"])],
+              foreground=[('disabled', "#475569")])
+
+    style.configure('Operator.TButton', font=('Segoe UI Semibold', 14), padding=base_padding,
+                    background=palette["raised"], foreground=palette["operator"],
+                    borderwidth=0, relief='flat')
+    style.map('Operator.TButton',
+              background=[('active', palette["operator"]), ('pressed', palette["operator"])],
+              foreground=[('active', palette["card"])])
+
+    style.configure('Accent.TButton', font=('Segoe UI Semibold', 14), padding=base_padding,
+                    background=palette["accent"], foreground=palette["card"],
+                    borderwidth=0, relief='flat')
+    style.map('Accent.TButton',
+              background=[('active', palette["accent_hover"]), ('pressed', palette["accent_hover"])],
+              foreground=[('active', palette["card"])])
+
+    style.configure('Clear.TButton', font=('Segoe UI Semibold', 14), padding=base_padding,
+                    background=palette["raised"], foreground=palette["warning"],
+                    borderwidth=0, relief='flat')
+    style.map('Clear.TButton',
+              background=[('active', palette["hover"]), ('pressed', palette["hover"])],
+              foreground=[('active', palette["card"])])
 
     calculator = Calculator(root)
     root.mainloop()
